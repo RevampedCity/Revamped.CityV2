@@ -1,0 +1,39 @@
+-- Script 1: Asking for the Key and Loading the Validation Script
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Function to prompt the player for a key (for simplicity, assume a GUI text box)
+function askForKey(player)
+    -- Wait for the player's GUI input (assuming you have a GUI with a text box for input)
+    local keyInput = player:WaitForChild("PlayerGui"):WaitForChild("KeyInput").Text -- Replace with your actual input field
+
+    -- Check if the key is valid (it could be part name or any key format you like)
+    if keyInput and keyInput ~= "" then
+        -- Load the second script to validate keys and client ID
+        loadValidationScript(player, keyInput)
+    else
+        warn("Invalid key input!")
+    end
+end
+
+-- Function to load the second script
+function loadValidationScript(player, keyInput)
+    -- Try to load the validation script
+    local validationScript = ReplicatedStorage:FindFirstChild("ValidationScript")
+    
+    if validationScript then
+        -- Clone the script and set the key input and player
+        local clonedScript = validationScript:Clone()
+        clonedScript.Parent = player:WaitForChild("PlayerScripts")
+        clonedScript:Fire(keyInput, player) -- Call the validation function with the key and player
+    else
+        warn("Validation script not found in ReplicatedStorage!")
+    end
+end
+
+-- When the player joins, prompt them for the key
+Players.PlayerAdded:Connect(function(player)
+    -- Setup a GUI element for key input and ask for key (You need to have a UI system with input for key)
+    askForKey(player)
+end)
