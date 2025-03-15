@@ -1,5 +1,5 @@
 -- Load the GUI Library
-local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/Rain-Design/Libraries/main/Shaman/Library.lua'))()
+local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/RevampedCity/Revamped.CityV2/refs/heads/main/Library'))()
 local Flags = Library.Flags
 
 -- Create the main window and tabs
