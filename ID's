@@ -1,1 +1,58 @@
+-- Script 2: Validating the Key and Client ID
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
+local Players = game:GetService("Players")
+
+-- Create folders for Keys and ClientIDs if they don't exist
+local keysFolder = ServerStorage:FindFirstChild("Keys")
+if not keysFolder then
+    keysFolder = Instance.new("Folder")
+    keysFolder.Name = "Keys"
+    keysFolder.Parent = ServerStorage
+end
+
+local clientIDsFolder = ServerStorage:FindFirstChild("ClientIDs")
+if not clientIDsFolder then
+    clientIDsFolder = Instance.new("Folder")
+    clientIDsFolder.Name = "ClientIDs"
+    clientIDsFolder.Parent = ServerStorage
+end
+
+-- Function to validate the key and client ID
+function validateKeyAndClientID(keyInput, player)
+    -- Check if the entered key is valid (matches any part in the Keys folder)
+    local keyPart = keysFolder:FindFirstChild(keyInput)
+    
+    if keyPart then
+        -- Check if the client ID matches
+        local clientIDPart = clientIDsFolder:FindFirstChild(tostring(player.UserId))
+        if clientIDPart then
+            -- If both match, load the main script
+            loadMainScript(player)
+        else
+            warn("Client ID does not match key!")
+        end
+    else
+        warn("Invalid key!")
+    end
+end
+
+-- Function to load the main script
+function loadMainScript(player)
+    local mainScript = ReplicatedStorage:FindFirstChild("MainScript")
+    if mainScript then
+        -- Clone and load the main script into the player's PlayerScripts
+        local clonedScript = mainScript:Clone()
+        clonedScript.Parent = player:WaitForChild("PlayerScripts")
+        print("Main script loaded successfully!")
+    else
+        warn("Main script not found!")
+    end
+end
+
+-- When the validation script is triggered by Script 1
+game.ReplicatedStorage:WaitForChild("ValidationScript").OnServerEvent:Connect(function(player, keyInput)
+    -- Validate the entered key and client ID
+    validateKeyAndClientID(keyInput, player)
+end)
