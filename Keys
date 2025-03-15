@@ -1,5 +1,6 @@
 return {
-    "Owner",
-    "validKey456",
-    "superSecret789"
+    {key = "Owner", clientId = "03F28BB1-1CF2-4617-8E17-52A74FD7EED5"},
+    {key = "key2", clientId = "A1B2C3D4-E5F6-1234-5678-9ABCD1234EFG"},
+    {key = "key3", clientId = "F1D2C3B4-8765-4321-ABCD-2345D67890FG"},
+    -- Add more keys and associated client IDs as needed
 }
