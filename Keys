@@ -1,2 +1,5 @@
-Owner
-
+return {
+    "Owner",
+    "validKey456",
+    "superSecret789"
+}
