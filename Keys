@@ -1,5 +1,16 @@
 {
-    "ABC123": "1234567890",
-    "XYZ789": "9876543210",
-    "DEF456": "1122334455"
+    "validKeys": [
+        {
+            "key": "ABC123",
+            "clientID": "03F28BB1-1CF2-4617-8E17-52A74FD7EED5"
+        },
+        {
+            "key": "XYZ789",
+            "clientID": "D8E10BB3-1A23-45D2-91FF-7A7B2C73B926"
+        },
+        {
+            "key": "DEF456",
+            "clientID": "F36E7FBC-38A1-492C-ACBD-61A8B53F9B7E"
+        }
+    ]
 }
