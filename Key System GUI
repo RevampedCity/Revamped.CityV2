@@ -1,39 +1,183 @@
--- Script 1: Asking for the Key and Loading the Validation Script
+local player = game.Players.LocalPlayer
+local HttpService = game:GetService("HttpService")
+local attempts = 0  -- Track the number of attempts
 
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- Function to fetch and parse JSON data from GitHub
+local function fetchAndParseKeys()
+    local success, response = pcall(function()
+        -- Fetch the raw JSON content from GitHub using HttpGet
+        return game:HttpGet("https://raw.githubusercontent.com/RevampedCity/Revamped.CityV2/main/Keys")
+    end)
 
--- Function to prompt the player for a key (for simplicity, assume a GUI text box)
-function askForKey(player)
-    -- Wait for the player's GUI input (assuming you have a GUI with a text box for input)
-    local keyInput = player:WaitForChild("PlayerGui"):WaitForChild("KeyInput").Text -- Replace with your actual input field
+    if success then
+        -- Parse the JSON data into a Lua table
+        local success, keys = pcall(function()
+            return HttpService:JSONDecode(response)
+        end)
 
-    -- Check if the key is valid (it could be part name or any key format you like)
-    if keyInput and keyInput ~= "" then
-        -- Load the second script to validate keys and client ID
-        loadValidationScript(player, keyInput)
+        if success then
+            -- Successfully parsed the keys from the JSON data
+            print("Keys successfully loaded:", keys)
+            return keys
+        else
+            -- Error parsing JSON
+            warn("Failed to parse JSON:", keys)
+            return nil
+        end
     else
-        warn("Invalid key input!")
+        -- If fetching the data fails
+        warn("Failed to fetch JSON data from GitHub.")
+        return nil
     end
 end
 
--- Function to load the second script
-function loadValidationScript(player, keyInput)
-    -- Try to load the validation script
-    local validationScript = ReplicatedStorage:FindFirstChild("ValidationScript")
+-- Function to validate the key and clientId
+local function validateKey(inputKey, inputClientId)
+    local keys = fetchAndParseKeys()
     
-    if validationScript then
-        -- Clone the script and set the key input and player
-        local clonedScript = validationScript:Clone()
-        clonedScript.Parent = player:WaitForChild("PlayerScripts")
-        clonedScript:Fire(keyInput, player) -- Call the validation function with the key and player
-    else
-        warn("Validation script not found in ReplicatedStorage!")
+    if not keys then
+        return false
     end
+
+    -- Check if the inputKey and inputClientId match
+    for _, keyData in pairs(keys) do
+        if keyData.key == inputKey and keyData.clientId == inputClientId then
+            return true
+        end
+    end
+    return false
 end
 
--- When the player joins, prompt them for the key
-Players.PlayerAdded:Connect(function(player)
-    -- Setup a GUI element for key input and ask for key (You need to have a UI system with input for key)
-    askForKey(player)
+-- Create the GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 500, 0, 300)
+frame.Position = UDim2.new(0.5, -250, 0.5, -150)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BorderSizePixel = 0
+frame.Parent = screenGui
+
+-- Add rounded corners for modern look
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 15)
+UICorner.Parent = frame
+
+-- Title Label
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(0, 400, 0, 50)
+titleLabel.Position = UDim2.new(0.5, -200, 0, 0)
+titleLabel.Text = "Revamped.City Key System"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextSize = 30
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.BackgroundTransparency = 1
+titleLabel.Parent = frame
+
+-- Key Input Label
+local keyLabel = Instance.new("TextLabel")
+keyLabel.Size = UDim2.new(0, 400, 0, 50)
+keyLabel.Position = UDim2.new(0.5, -200, 0.25, 0)
+keyLabel.Text = "Enter Key:"
+keyLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+keyLabel.TextSize = 20
+keyLabel.Font = Enum.Font.Gotham
+keyLabel.BackgroundTransparency = 1
+keyLabel.Parent = frame
+
+-- TextBox for entering the key
+local keyBox = Instance.new("TextBox")
+keyBox.Size = UDim2.new(0, 300, 0, 40)
+keyBox.Position = UDim2.new(0.5, -150, 0.35, 0)
+keyBox.Text = ""
+keyBox.PlaceholderText = "Type key here"
+keyBox.TextColor3 = Color3.fromRGB(0, 0, 0)
+keyBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+keyBox.Font = Enum.Font.Gotham
+keyBox.TextSize = 18
+keyBox.BorderSizePixel = 2
+keyBox.BorderColor3 = Color3.fromRGB(200, 200, 200)
+keyBox.Parent = frame
+
+-- Button for submitting the key
+local submitButton = Instance.new("TextButton")
+submitButton.Size = UDim2.new(0, 200, 0, 50)
+submitButton.Position = UDim2.new(0.5, -100, 0.55, 0)
+submitButton.Text = "Submit"
+submitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+submitButton.BackgroundColor3 = Color3.fromRGB(0, 128, 0)
+submitButton.Font = Enum.Font.GothamBold
+submitButton.TextSize = 20
+submitButton.BorderSizePixel = 0
+submitButton.Parent = frame
+
+-- Add rounded corners to the button
+local buttonUICorner = Instance.new("UICorner")
+buttonUICorner.CornerRadius = UDim.new(0, 15)
+buttonUICorner.Parent = submitButton
+
+-- Success/Error message label
+local messageLabel = Instance.new("TextLabel")
+messageLabel.Size = UDim2.new(0, 400, 0, 50)
+messageLabel.Position = UDim2.new(0.5, -200, 0.75, 0)
+messageLabel.Text = ""
+messageLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+messageLabel.TextSize = 20
+messageLabel.Font = Enum.Font.Gotham
+messageLabel.BackgroundTransparency = 1
+messageLabel.Parent = frame
+
+-- Draggable GUI setup
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+frame.InputBegan:Connect(function(input, isProcessed)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 and not isProcessed then
+        dragging = true
+        dragStart = input.Position
+        startPos = frame.Position
+    end
+end)
+
+frame.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+frame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+-- Button click event
+submitButton.MouseButton1Click:Connect(function()
+    local inputKey = keyBox.Text
+    local inputClientId = game:GetService("RbxAnalyticsService"):GetClientId()
+    
+    if inputKey == "" then
+        messageLabel.Text = "Please enter a key!"
+        messageLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        return
+    end
+
+    if validateKey(inputKey, inputClientId) then
+        -- Show success message
+        messageLabel.Text = "Welcome!"
+        messageLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+    else
+        -- Show error message
+        attempts = attempts + 1
+        messageLabel.Text = "Invalid!"
+        messageLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        if attempts >= 3 then
+            -- Close the game after 3 invalid attempts
+            game:Shutdown()
+        end
+    end
 end)
