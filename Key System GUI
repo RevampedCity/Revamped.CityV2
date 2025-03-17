@@ -1,55 +1,26 @@
-local player = game.Players.LocalPlayer
-local HttpService = game:GetService("HttpService")
-local attempts = 0  -- Track the number of attempts
+local player, HttpService = game.Players.LocalPlayer, game:GetService("HttpService")
+local attempts = 0
+local screenGui -- Reference to the ScreenGui for later removal
 
--- Function to fetch and parse JSON data from GitHub
 local function fetchAndParseKeys()
-    local success, response = pcall(function()
-        -- Fetch the raw JSON content from GitHub using HttpGet
-        return game:HttpGet("https://raw.githubusercontent.com/RevampedCity/Revamped.CityV2/main/Keys")
-    end)
-
+    local success, response = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/RevampedCity/Revamped.CityV2/main/Keys") end)
     if success then
-        -- Parse the JSON data into a Lua table
-        local success, keys = pcall(function()
-            return HttpService:JSONDecode(response)
-        end)
-
-        if success then
-            -- Successfully parsed the keys from the JSON data
-            print("Keys successfully loaded:", keys)
-            return keys
-        else
-            -- Error parsing JSON
-            warn("Failed to parse JSON:", keys)
-            return nil
-        end
-    else
-        -- If fetching the data fails
-        warn("Failed to fetch JSON data from GitHub.")
-        return nil
+        local success, keys = pcall(function() return HttpService:JSONDecode(response) end)
+        return success and keys or nil
     end
+    return nil
 end
 
--- Function to validate the key and clientId
 local function validateKey(inputKey, inputClientId)
     local keys = fetchAndParseKeys()
-    
-    if not keys then
-        return false
-    end
-
-    -- Check if the inputKey and inputClientId match
+    if not keys then return false end
     for _, keyData in pairs(keys) do
-        if keyData.key == inputKey and keyData.clientId == inputClientId then
-            return true
-        end
+        if keyData.key == inputKey and keyData.clientId == inputClientId then return true end
     end
     return false
 end
 
--- Create the GUI
-local screenGui = Instance.new("ScreenGui")
+screenGui = Instance.new("ScreenGui")
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
 local frame = Instance.new("Frame")
@@ -59,12 +30,10 @@ frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.BorderSizePixel = 0
 frame.Parent = screenGui
 
--- Add rounded corners for modern look
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 15)
 UICorner.Parent = frame
 
--- Title Label
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(0, 400, 0, 50)
 titleLabel.Position = UDim2.new(0.5, -200, 0, 0)
@@ -75,10 +44,9 @@ titleLabel.Font = Enum.Font.GothamBold
 titleLabel.BackgroundTransparency = 1
 titleLabel.Parent = frame
 
--- Key Input Label
 local keyLabel = Instance.new("TextLabel")
 keyLabel.Size = UDim2.new(0, 400, 0, 50)
-keyLabel.Position = UDim2.new(0.5, -200, 0.25, 0)
+keyLabel.Position = UDim2.new(0.5, -200, 0.2, 0)
 keyLabel.Text = "Enter Key:"
 keyLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 keyLabel.TextSize = 20
@@ -86,7 +54,6 @@ keyLabel.Font = Enum.Font.Gotham
 keyLabel.BackgroundTransparency = 1
 keyLabel.Parent = frame
 
--- TextBox for entering the key
 local keyBox = Instance.new("TextBox")
 keyBox.Size = UDim2.new(0, 300, 0, 40)
 keyBox.Position = UDim2.new(0.5, -150, 0.35, 0)
@@ -100,7 +67,6 @@ keyBox.BorderSizePixel = 2
 keyBox.BorderColor3 = Color3.fromRGB(200, 200, 200)
 keyBox.Parent = frame
 
--- Button for submitting the key
 local submitButton = Instance.new("TextButton")
 submitButton.Size = UDim2.new(0, 200, 0, 50)
 submitButton.Position = UDim2.new(0.5, -100, 0.55, 0)
@@ -112,12 +78,10 @@ submitButton.TextSize = 20
 submitButton.BorderSizePixel = 0
 submitButton.Parent = frame
 
--- Add rounded corners to the button
 local buttonUICorner = Instance.new("UICorner")
 buttonUICorner.CornerRadius = UDim.new(0, 15)
 buttonUICorner.Parent = submitButton
 
--- Success/Error message label
 local messageLabel = Instance.new("TextLabel")
 messageLabel.Size = UDim2.new(0, 400, 0, 50)
 messageLabel.Position = UDim2.new(0.5, -200, 0.75, 0)
@@ -128,12 +92,7 @@ messageLabel.Font = Enum.Font.Gotham
 messageLabel.BackgroundTransparency = 1
 messageLabel.Parent = frame
 
--- Draggable GUI setup
-local dragging
-local dragInput
-local dragStart
-local startPos
-
+local dragging, dragStart, startPos
 frame.InputBegan:Connect(function(input, isProcessed)
     if input.UserInputType == Enum.UserInputType.MouseButton1 and not isProcessed then
         dragging = true
@@ -150,16 +109,13 @@ frame.InputChanged:Connect(function(input)
 end)
 
 frame.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
 end)
 
--- Button click event
 submitButton.MouseButton1Click:Connect(function()
     local inputKey = keyBox.Text
     local inputClientId = game:GetService("RbxAnalyticsService"):GetClientId()
-    
+
     if inputKey == "" then
         messageLabel.Text = "Please enter a key!"
         messageLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
@@ -167,17 +123,28 @@ submitButton.MouseButton1Click:Connect(function()
     end
 
     if validateKey(inputKey, inputClientId) then
-        -- Show success message
         messageLabel.Text = "Welcome!"
         messageLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+
+        -- Fetch and execute the Source.lua script if everything is valid
+        local success, scriptContent = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/RevampedCity/Revamped.CityV2/main/Source.lua") end)
+        if success then
+            local loadSuccess, loadResult = pcall(loadstring(scriptContent))
+            if not loadSuccess then
+                messageLabel.Text = "Failed to load the script!"
+                messageLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+            else
+                -- Close the key system GUI after the script is executed
+                screenGui:Destroy()
+            end
+        else
+            messageLabel.Text = "Failed to fetch script!"
+            messageLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        end
     else
-        -- Show error message
         attempts = attempts + 1
         messageLabel.Text = "Invalid!"
         messageLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-        if attempts >= 3 then
-            -- Close the game after 3 invalid attempts
-            game:Shutdown()
-        end
+        if attempts >= 3 then game:Shutdown() end
     end
 end)
