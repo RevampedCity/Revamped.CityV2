@@ -375,6 +375,8 @@ teleportTo(location.position)
 end
 })
 end
+
+
 -- AutoFarm --
 local autoFarmTab = Window:Tab({ Text = "Auto Farm" })
 local autoFarmSection = autoFarmTab:Section({ Text = "Auto Farms" })
@@ -669,143 +671,114 @@ local koolaidFarmToggle = autoFarmSection:Toggle({
     end
 })
 
--- Vehicals --
--- Vehicals --
-VehicalsTab = Window:Tab({ Text = "Vehicals" })
+-- Shop --
+local shopTab = Window:Tab({ Text = "Shop" })
+local exoticDealerSection = shopTab:Section({ Text = "Exotic Dealer" })
 
-local VehicalsSection = VehicalsTab:Section({ Text = "Vehical Settings" })
+local function purchaseItem(itemName)
+    game:GetService("ReplicatedStorage"):WaitForChild("ExoticShopRemote"):InvokeServer(itemName)
+end
 
-local isFlying = false
-local bodyVelocity, bodyGyro, flyingSeat, humanoid, player
+-- Buttons for each item in the shop
+exoticDealerSection:Button({ Text = "Lemonade $500", Callback = function()
+    purchaseItem("Lemonade")
+end })
 
--- Exploit 1: Speed Multiplier (Faster Car)
-VehicalsSection:Slider({
-    Text = "Speed Multiplier",
-    Min = 1,
-    Max = 100,
-    Default = 1,
-    Increment = 1,
-    Callback = function(Value)
-        -- Apply speed multiplier to vehicle
-        local met = getrawmetatable(game)
-        setreadonly(met, false)
-        local old = met.__newindex
-        met.__newindex = function(t, k, v)
-            if tostring(t) == "#AV" then
-                if k == "angularvelocity" or k == "maxTorque" then
-                    return old(t, k, Vector3.new(v.X * Value, v.Y * Value, v.Z * Value))
-                end
-            end
-            return old(t, k, v)
-        end
+exoticDealerSection:Button({ Text = "FakeCard $700", Callback = function()
+    purchaseItem("FakeCard")
+end })
+
+exoticDealerSection:Button({ Text = "G26 $550", Callback = function()
+    purchaseItem("G26")
+end })
+
+exoticDealerSection:Button({ Text = "Shiesty $75", Callback = function()
+    purchaseItem("Shiesty")
+end })
+
+exoticDealerSection:Button({ Text = "RawSteak $10", Callback = function()
+    purchaseItem("RawSteak")
+end })
+
+exoticDealerSection:Button({ Text = "Ice-Fruit Bag $2500", Callback = function()
+    purchaseItem("Ice-Fruit Bag")
+end })
+
+exoticDealerSection:Button({ Text = "Ice-Fruit Cupz $150", Callback = function()
+    purchaseItem("Ice-Fruit Cupz")
+end })
+
+exoticDealerSection:Button({ Text = "FijiWater $48", Callback = function()
+    purchaseItem("FijiWater")
+end })
+
+
+local backpackShopSection = shopTab:Section({ Text = "Backpack Shop" })
+local player = game:GetService("Players").LocalPlayer
+
+-- Function to enable Freefall method for smooth teleportation
+local function teleportTo(position)
+    getgenv().FreeFallMethod = true
+    task.wait(0.8)  -- Wait 0.8s before teleporting
+
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(position)
     end
-})
 
--- Exploit 2: Toggle Fly (Flying Car with Player Controls)
-VehicalsSection:Toggle({
-    Text = "Enable Flying",
-    Default = false,
-    Callback = function(Value)
-        if player and player.Character then
-            local seatPart = player.Character:FindFirstChildOfClass('Humanoid').SeatPart
-            if seatPart then
-                isFlying = Value  -- Set flying state based on toggle
-                
-                if isFlying then
-                    -- Freeze car in place and start flying
-                    humanoid.PlatformStand = true  -- Disable character movement
+    getgenv().FreeFallMethod = false
+end
 
-                    -- Create BodyVelocity and BodyGyro for flight control
-                    bodyVelocity = Instance.new("BodyVelocity")
-                    bodyGyro = Instance.new("BodyGyro")
-                    flyingSeat = seatPart
+-- Function to handle teleportation and return
+local function buyBackpack(position)
+    local originalPosition = player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character.HumanoidRootPart.Position
 
-                    -- Apply the forces and gyro to the seat part for flying
-                    bodyVelocity.MaxForce = Vector3.new(400000, 400000, 400000)  -- Strong force to keep the car flying
-                    bodyVelocity.Velocity = Vector3.new(0, 50, 0)  -- Initial upward velocity for flying
-                    bodyVelocity.Parent = seatPart
-                    
-                    bodyGyro.MaxTorque = Vector3.new(400000, 400000, 400000)  -- Torque for stable orientation
-                    bodyGyro.CFrame = seatPart.CFrame  -- Keep the car upright
-                    bodyGyro.Parent = seatPart
+    teleportTo(position)  -- Teleport to backpack shop location
 
-                    -- Allow smooth movement control while flying
-                    game:GetService("UserInputService").InputChanged:Connect(function(input)
-                        if isFlying then
-                            local forwardVelocity = 0
-                            local sideVelocity = 0
-                            local verticalVelocity = 0
+    -- Wait for player to press "E" (buying action)
+    game:GetService("UserInputService").InputBegan:Wait()
 
-                            -- WASD for movement controls
-                            if input.KeyCode == Enum.KeyCode.W then
-                                forwardVelocity = 100
-                            elseif input.KeyCode == Enum.KeyCode.A then
-                                sideVelocity = -100
-                            elseif input.KeyCode == Enum.KeyCode.S then
-                                forwardVelocity = -100
-                            elseif input.KeyCode == Enum.KeyCode.D then
-                                sideVelocity = 100
-                            end
+    -- Ensure the player is teleported back
+    if originalPosition then
+        repeat
+            teleportTo(originalPosition)
+            task.wait(0.5)
+        until (player.Character and player.Character:FindFirstChild("HumanoidRootPart") and (player.Character.HumanoidRootPart.Position - originalPosition).Magnitude < 5)
+    end
+end
 
-                            -- Space to go up, LeftShift to go down
-                            if input.KeyCode == Enum.KeyCode.Space then
-                                verticalVelocity = 50  -- Upward thrust
-                            elseif input.KeyCode == Enum.KeyCode.LeftShift then
-                                verticalVelocity = -50  -- Downward thrust
-                            end
+-- Backpack data (name, price, and position)
+local backpacks = {
+    { name = "Red Elite Bag $500", position = Vector3.new(-714.2327, 253.5981, -692.7017) },
+    { name = "Black Elite Bag $500", position = Vector3.new(-712.9567, 253.5981, -691.3503) },
+    { name = "Blue Elite Bag $500", position = Vector3.new(-709.8685, 253.5981, -689.7072) },
+    { name = "Drac Bag $700", position = Vector3.new(-706.9940, 253.5981, -689.7107) },
+    { name = "Yellow RCR Bag $2000", position = Vector3.new(-699.8688, 253.5981, -694.0794) },
+    { name = "Black RCR Bag $2000", position = Vector3.new(-704.7261, 253.5981, -689.7491) },
+    { name = "Red RCR Bag $2000", position = Vector3.new(-702.1082, 253.5981, -691.1790) },
+    { name = "Black Designer Bag $2000", position = Vector3.new(-700.9933, 253.5981, -692.5190) }
+}
 
-                            -- Apply movement based on the controls
-                            local forwardMovement = seatPart.CFrame.LookVector * forwardVelocity
-                            local sideMovement = seatPart.CFrame.RightVector * sideVelocity
-                            local verticalMovement = Vector3.new(0, verticalVelocity, 0)
+-- Create buttons for each backpack
+for _, bag in ipairs(backpacks) do
+    backpackShopSection:Button({
+        Text = bag.name,
+        Callback = function()
+            buyBackpack(bag.position)
+        end
+    })
+end
 
-                            -- Combine all movements and apply to BodyVelocity
-                            bodyVelocity.Velocity = forwardMovement + sideMovement + verticalMovement
-                        end
-                    end)
-
-                    -- Allow the player to control pitch, yaw, and roll for flight control
-                    game:GetService("UserInputService").InputChanged:Connect(function(input)
-                        if isFlying then
-                            local roll = 0
-                            local pitch = 0
-                            local yaw = 0
-
-                            -- Arrow keys or WASD for controlling pitch, yaw, roll
-                            if input.KeyCode == Enum.KeyCode.Up then
-                                pitch = 5  -- Nose up
-                            elseif input.KeyCode == Enum.KeyCode.Down then
-                                pitch = -5  -- Nose down
-                            elseif input.KeyCode == Enum.KeyCode.Left then
-                                yaw = -5  -- Turn left
-                            elseif input.KeyCode == Enum.KeyCode.Right then
-                                yaw = 5  -- Turn right
-                            elseif input.KeyCode == Enum.KeyCode.Q then
-                                roll = -5  -- Roll left
-                            elseif input.KeyCode == Enum.KeyCode.E then
-                                roll = 5  -- Roll right
-                            end
-
-                            -- Apply smooth orientation control
-                            bodyGyro.CFrame = bodyGyro.CFrame * CFrame.Angles(math.rad(pitch), math.rad(yaw), math.rad(roll))
-                        end
-                    end)
-                else
-                    -- Disable flying by removing the forces and restoring normal behavior
-                    if bodyVelocity then
-                        bodyVelocity:Destroy()
-                    end
-                    if bodyGyro then
-                        bodyGyro:Destroy()
-                    end
-                    humanoid.PlatformStand = false  -- Re-enable normal character movement
-                end
+-- Freefall handling loop
+task.spawn(function()
+    while task.wait() do
+        if getgenv().FreeFallMethod then
+            if player and player.Character and player.Character:FindFirstChild("Humanoid") then
+                local humanoid = player.Character.Humanoid
+                humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
             end
         end
     end
-})
-
--- Add more exploits and functionalities here as needed
+end)
 
 
 -- Bypasses --
@@ -881,8 +854,6 @@ bypassSection:Toggle({
     end
 })
 -- Rage -- 
--- Load the GUI library
-
 -- Create Rage tab and Exploit section
 local RageTab = Window:Tab({ Text = "Rage" })
 local ExploitSection = RageTab:Section({ Text = "Exploit" })
@@ -897,6 +868,7 @@ local playerPositions = {}
 local Plr = game:GetService("Players").LocalPlayer
 local Mouse = Plr:GetMouse()
 local deleteEnabled = false
+local bringPlayersActive = false  -- Track bring players toggle state
 
 Mouse.Button1Down:connect(function()
     if not deleteEnabled then
@@ -928,10 +900,11 @@ end
 
 -- Function to bring all players in a circle around the local player if they're not sitting and alive
 local function BringPlayersInFront()
-    local angleStep = 360 / #game.Players:GetPlayers()  -- Angle step for positioning players in a circle
+    local players = game.Players:GetPlayers()
+    local angleStep = 360 / math.max(#players, 1)  -- Avoid division by zero
     local radius = 10  -- Radius of the circle around the local player
 
-    for _, player in pairs(game.Players:GetPlayers()) do
+    for i, player in ipairs(players) do
         if player ~= game.Players.LocalPlayer then
             local character = player.Character
             if character and character:FindFirstChild("HumanoidRootPart") then
@@ -946,7 +919,7 @@ local function BringPlayersInFront()
                     end
 
                     -- Calculate the angle in radians
-                    local angle = math.rad(angleStep * _)
+                    local angle = math.rad(angleStep * i)
                     -- Position players in a circle around the local player
                     local xOffset = math.cos(angle) * radius
                     local zOffset = math.sin(angle) * radius
@@ -986,14 +959,15 @@ local DeleteToggle = ExploitSection:Toggle({
 local BringPlayersToggle = ExploitSection:Toggle({
     Text = "Bring All Players in Circle",  -- Text for the toggle
     Callback = function(toggleState)
-        if toggleState then
-            -- Continuously bring players in front of the local player in a circle
-            while toggleState do
-                BringPlayersInFront()
-                wait(0.1)  -- Adjust the loop speed as needed
-            end
+        bringPlayersActive = toggleState  -- Update the tracking variable
+        if bringPlayersActive then
+            task.spawn(function()  -- Run in a separate thread to prevent UI lag
+                while bringPlayersActive do
+                    BringPlayersInFront()
+                    wait(0.1)  -- Adjust the loop speed as needed
+                end
+            end)
         else
-            -- Return players to their original positions when toggled off
             ReturnPlayersToOriginalPosition()
         end
     end
