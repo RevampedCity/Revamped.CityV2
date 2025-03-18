@@ -1,17 +1,14 @@
 -- Load Library --
-local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/RevampedCity/Revamped.CityV2/refs/heads/main/Library.lua'))()
-local Window = Library:Window({ Text = "Revamped.City | 🐍THA BRONX 3🔪" })
+    local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/RevampedCity/Revamped.CityV2/refs/heads/main/Library.lua'))()
+    local Window = Library:Window({ Text = "Revamped.City | 🐍THA BRONX 3🔪" })
 
--- Main --
-local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/RevampedCity/Revamped.CityV2/refs/heads/main/Library.lua'))()
-local Window = Library:Window({ Text = "Revamped.City | 🐍THA BRONX 3🔪" })
 -- Player --
-local playerTab = Window:Tab({ Text = "Player" })
-local playerSection = playerTab:Section({ Text = "Player Options" })
-local player = game:GetService("Players").LocalPlayer
-local function deleteInfiniteScripts()
-local gui = player.PlayerGui
-local scriptsToDelete = {
+    local playerTab = Window:Tab({ Text = "Player" })
+    local playerSection = playerTab:Section({ Text = "Player Options" })
+    local player = game:GetService("Players").LocalPlayer
+    local function deleteInfiniteScripts()
+    local gui = player.PlayerGui
+    local scriptsToDelete = {
 gui.Run.Frame.Frame.Frame:FindFirstChild("StaminaBarScript"),
 gui.Hunger.Frame.Frame.Frame:FindFirstChild("HungerBarScript"),
 gui.SleepGui.Frame.sleep.SleepBar:FindFirstChild("sleepScript"),
@@ -672,6 +669,144 @@ local koolaidFarmToggle = autoFarmSection:Toggle({
     end
 })
 
+-- Vehicals --
+-- Vehicals --
+VehicalsTab = Window:Tab({ Text = "Vehicals" })
+
+local VehicalsSection = VehicalsTab:Section({ Text = "Vehical Settings" })
+
+local isFlying = false
+local bodyVelocity, bodyGyro, flyingSeat, humanoid, player
+
+-- Exploit 1: Speed Multiplier (Faster Car)
+VehicalsSection:Slider({
+    Text = "Speed Multiplier",
+    Min = 1,
+    Max = 100,
+    Default = 1,
+    Increment = 1,
+    Callback = function(Value)
+        -- Apply speed multiplier to vehicle
+        local met = getrawmetatable(game)
+        setreadonly(met, false)
+        local old = met.__newindex
+        met.__newindex = function(t, k, v)
+            if tostring(t) == "#AV" then
+                if k == "angularvelocity" or k == "maxTorque" then
+                    return old(t, k, Vector3.new(v.X * Value, v.Y * Value, v.Z * Value))
+                end
+            end
+            return old(t, k, v)
+        end
+    end
+})
+
+-- Exploit 2: Toggle Fly (Flying Car with Player Controls)
+VehicalsSection:Toggle({
+    Text = "Enable Flying",
+    Default = false,
+    Callback = function(Value)
+        if player and player.Character then
+            local seatPart = player.Character:FindFirstChildOfClass('Humanoid').SeatPart
+            if seatPart then
+                isFlying = Value  -- Set flying state based on toggle
+                
+                if isFlying then
+                    -- Freeze car in place and start flying
+                    humanoid.PlatformStand = true  -- Disable character movement
+
+                    -- Create BodyVelocity and BodyGyro for flight control
+                    bodyVelocity = Instance.new("BodyVelocity")
+                    bodyGyro = Instance.new("BodyGyro")
+                    flyingSeat = seatPart
+
+                    -- Apply the forces and gyro to the seat part for flying
+                    bodyVelocity.MaxForce = Vector3.new(400000, 400000, 400000)  -- Strong force to keep the car flying
+                    bodyVelocity.Velocity = Vector3.new(0, 50, 0)  -- Initial upward velocity for flying
+                    bodyVelocity.Parent = seatPart
+                    
+                    bodyGyro.MaxTorque = Vector3.new(400000, 400000, 400000)  -- Torque for stable orientation
+                    bodyGyro.CFrame = seatPart.CFrame  -- Keep the car upright
+                    bodyGyro.Parent = seatPart
+
+                    -- Allow smooth movement control while flying
+                    game:GetService("UserInputService").InputChanged:Connect(function(input)
+                        if isFlying then
+                            local forwardVelocity = 0
+                            local sideVelocity = 0
+                            local verticalVelocity = 0
+
+                            -- WASD for movement controls
+                            if input.KeyCode == Enum.KeyCode.W then
+                                forwardVelocity = 100
+                            elseif input.KeyCode == Enum.KeyCode.A then
+                                sideVelocity = -100
+                            elseif input.KeyCode == Enum.KeyCode.S then
+                                forwardVelocity = -100
+                            elseif input.KeyCode == Enum.KeyCode.D then
+                                sideVelocity = 100
+                            end
+
+                            -- Space to go up, LeftShift to go down
+                            if input.KeyCode == Enum.KeyCode.Space then
+                                verticalVelocity = 50  -- Upward thrust
+                            elseif input.KeyCode == Enum.KeyCode.LeftShift then
+                                verticalVelocity = -50  -- Downward thrust
+                            end
+
+                            -- Apply movement based on the controls
+                            local forwardMovement = seatPart.CFrame.LookVector * forwardVelocity
+                            local sideMovement = seatPart.CFrame.RightVector * sideVelocity
+                            local verticalMovement = Vector3.new(0, verticalVelocity, 0)
+
+                            -- Combine all movements and apply to BodyVelocity
+                            bodyVelocity.Velocity = forwardMovement + sideMovement + verticalMovement
+                        end
+                    end)
+
+                    -- Allow the player to control pitch, yaw, and roll for flight control
+                    game:GetService("UserInputService").InputChanged:Connect(function(input)
+                        if isFlying then
+                            local roll = 0
+                            local pitch = 0
+                            local yaw = 0
+
+                            -- Arrow keys or WASD for controlling pitch, yaw, roll
+                            if input.KeyCode == Enum.KeyCode.Up then
+                                pitch = 5  -- Nose up
+                            elseif input.KeyCode == Enum.KeyCode.Down then
+                                pitch = -5  -- Nose down
+                            elseif input.KeyCode == Enum.KeyCode.Left then
+                                yaw = -5  -- Turn left
+                            elseif input.KeyCode == Enum.KeyCode.Right then
+                                yaw = 5  -- Turn right
+                            elseif input.KeyCode == Enum.KeyCode.Q then
+                                roll = -5  -- Roll left
+                            elseif input.KeyCode == Enum.KeyCode.E then
+                                roll = 5  -- Roll right
+                            end
+
+                            -- Apply smooth orientation control
+                            bodyGyro.CFrame = bodyGyro.CFrame * CFrame.Angles(math.rad(pitch), math.rad(yaw), math.rad(roll))
+                        end
+                    end)
+                else
+                    -- Disable flying by removing the forces and restoring normal behavior
+                    if bodyVelocity then
+                        bodyVelocity:Destroy()
+                    end
+                    if bodyGyro then
+                        bodyGyro:Destroy()
+                    end
+                    humanoid.PlatformStand = false  -- Re-enable normal character movement
+                end
+            end
+        end
+    end
+})
+
+-- Add more exploits and functionalities here as needed
+
 
 -- Bypasses --
 local bypassTab = Window:Tab({ Text = "Bypasses" })
@@ -745,7 +880,125 @@ bypassSection:Toggle({
         end
     end
 })
---
+-- Rage -- 
+-- Load the GUI library
+
+-- Create Rage tab and Exploit section
+local RageTab = Window:Tab({ Text = "Rage" })
+local ExploitSection = RageTab:Section({ Text = "Exploit" })
+
+-- Store deleted parts so we can bring them back
+local deletedParts = {}
+
+-- Store players' original positions
+local playerPositions = {}
+
+-- C + Delete functionality
+local Plr = game:GetService("Players").LocalPlayer
+local Mouse = Plr:GetMouse()
+local deleteEnabled = false
+
+Mouse.Button1Down:connect(function()
+    if not deleteEnabled then
+        return
+    end
+    if not game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.C) then
+        return
+    end
+    if not Mouse.Target then
+        return
+    end
+
+    -- Save the deleted part to bring it back later
+    local deletedPart = Mouse.Target
+    table.insert(deletedParts, deletedPart)
+    deletedPart:Destroy()
+end)
+
+-- Function to restore deleted parts
+local function RestoreDeletedParts()
+    for _, part in pairs(deletedParts) do
+        if part.Parent == nil then
+            local restoredPart = part:Clone()
+            restoredPart.Parent = game.Workspace
+        end
+    end
+    deletedParts = {}  -- Clear the list of deleted parts after restoring
+end
+
+-- Function to bring all players in a circle around the local player if they're not sitting and alive
+local function BringPlayersInFront()
+    local angleStep = 360 / #game.Players:GetPlayers()  -- Angle step for positioning players in a circle
+    local radius = 10  -- Radius of the circle around the local player
+
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player ~= game.Players.LocalPlayer then
+            local character = player.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                local humanoidRootPart = character.HumanoidRootPart
+                local humanoid = character:FindFirstChild("Humanoid")
+
+                -- Check if the humanoid exists, if the player is not sitting, and if the player is alive
+                if humanoid and not humanoid.SeatPart and humanoid.Health > 0 then
+                    -- Store original position if not already stored
+                    if not playerPositions[player] then
+                        playerPositions[player] = humanoidRootPart.Position
+                    end
+
+                    -- Calculate the angle in radians
+                    local angle = math.rad(angleStep * _)
+                    -- Position players in a circle around the local player
+                    local xOffset = math.cos(angle) * radius
+                    local zOffset = math.sin(angle) * radius
+
+                    -- Set the player's new position in the circle around the local player
+                    humanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(xOffset, 0, zOffset)
+                end
+            end
+        end
+    end
+end
+
+-- Function to return all players to their original positions
+local function ReturnPlayersToOriginalPosition()
+    for player, originalPosition in pairs(playerPositions) do
+        local character = player.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            character.HumanoidRootPart.CFrame = CFrame.new(originalPosition)
+        end
+    end
+    playerPositions = {}  -- Clear the stored positions
+end
+
+-- Add the toggle for C + Delete functionality in the Exploit section
+local DeleteToggle = ExploitSection:Toggle({
+    Text = "Enable C + Delete",  -- Text for the toggle
+    Callback = function(toggleState)
+        deleteEnabled = toggleState
+        if not deleteEnabled then
+            -- Restore deleted parts when the toggle is turned off
+            RestoreDeletedParts()
+        end
+    end
+})
+
+-- Add the toggle for bringing players in front of the local player in a circle
+local BringPlayersToggle = ExploitSection:Toggle({
+    Text = "Bring All Players in Circle",  -- Text for the toggle
+    Callback = function(toggleState)
+        if toggleState then
+            -- Continuously bring players in front of the local player in a circle
+            while toggleState do
+                BringPlayersInFront()
+                wait(0.1)  -- Adjust the loop speed as needed
+            end
+        else
+            -- Return players to their original positions when toggled off
+            ReturnPlayersToOriginalPosition()
+        end
+    end
+})
+
 --
 --
 --
