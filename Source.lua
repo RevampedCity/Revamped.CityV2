@@ -33,58 +33,72 @@ end
 })
 local movementSection = playerTab:Section({ Text = "Movement" })
 local isWalkspeedEnabled = false
-local walkspeedValue = 16
+local walkspeedValue = 16  -- Default WalkSpeed value
 getgenv().FreeFallMethod = false
+
+local player = game:GetService("Players").LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+-- Function to enable Freefall method with teleport and speed update
 local function toggleFreeFall(state)
-if state then
-getgenv().FreeFallMethod = true
-local player = game:GetService("Players").LocalPlayer
-if player and player.Character and player.Character:FindFirstChild("Humanoid") then
-local humanoid = player.Character.Humanoid
-humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
+    if state then
+        -- Enable freefall
+        getgenv().FreeFallMethod = true
+
+        -- Wait for 0.8 seconds before teleporting
+        task.wait(0.8)
+
+        -- Teleport to current position (HumanoidRootPart)
+        local originalPosition = hrp.Position
+        if hrp then
+            hrp.CFrame = CFrame.new(originalPosition)  -- Teleport to the current position
+        end
+
+        -- Change WalkSpeed to the selected value
+        humanoid.WalkSpeed = walkspeedValue
+
+        -- Enable Freefall animation or movement
+        humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
+    else
+        -- Disable freefall and return to normal state
+        getgenv().FreeFallMethod = false
+        humanoid:ChangeState(Enum.HumanoidStateType.Physics)  -- Stop freefall
+
+        -- Teleport the player back to their current position
+        local currentPosition = hrp.Position
+        if hrp then
+            hrp.CFrame = CFrame.new(currentPosition)  -- Teleport back to the original location
+        end
+
+        -- Reset WalkSpeed to default (16)
+        humanoid.WalkSpeed = 16
+    end
 end
-else
-getgenv().FreeFallMethod = false
-local player = game:GetService("Players").LocalPlayer
-if player and player.Character and player.Character:FindFirstChild("Humanoid") then
-local humanoid = player.Character.Humanoid
-humanoid:ChangeState(Enum.HumanoidStateType.Physics)
-end
-end
-end
+
+-- Movement toggle with the slider to change WalkSpeed
 movementSection:Toggle({
-Text = "Enable Freefall",
-Callback = function(state)
-isWalkspeedEnabled = state
-toggleFreeFall(isWalkspeedEnabled)
-if isWalkspeedEnabled then
-while isWalkspeedEnabled do
-local player = game:GetService("Players").LocalPlayer
-if player and player.Character and player.Character:FindFirstChild("Humanoid") then
-local humanoid = player.Character.Humanoid
-humanoid.WalkSpeed = walkspeedValue
-end
-wait(0.1)  -- Small delay to prevent too frequent updates
-end
-end
-end
+    Text = "Enable Freefall",
+    Callback = function(state)
+        isWalkspeedEnabled = state
+        toggleFreeFall(isWalkspeedEnabled)
+    end
 })
+
 movementSection:Slider({
-Text = "Walkspeed",
-Min = 16,
-Max = 100,
-Default = walkspeedValue,
-Callback = function(value)
-walkspeedValue = value
-if isWalkspeedEnabled then
-local player = game:GetService("Players").LocalPlayer
-if player and player.Character and player.Character:FindFirstChild("Humanoid") then
-local humanoid = player.Character.Humanoid
-humanoid.WalkSpeed = walkspeedValue
-end
-end
-end
+    Text = "Walkspeed",
+    Min = 16,
+    Max = 100,
+    Default = walkspeedValue,
+    Callback = function(value)
+        walkspeedValue = value
+        if humanoid then
+            humanoid.WalkSpeed = walkspeedValue  -- Dynamically update WalkSpeed when the slider is adjusted
+        end
+    end
 })
+
 -- Visuals --
 local VisualTab = Window:Tab({ Text = "Visual" })
 local ESPSection = VisualTab:Section({ Text = "ESP Options" })
@@ -375,8 +389,6 @@ teleportTo(location.position)
 end
 })
 end
-
-
 -- AutoFarm --
 local autoFarmTab = Window:Tab({ Text = "Auto Farm" })
 local autoFarmSection = autoFarmTab:Section({ Text = "Auto Farms" })
@@ -712,9 +724,11 @@ exoticDealerSection:Button({ Text = "FijiWater $48", Callback = function()
     purchaseItem("FijiWater")
 end })
 
+-- Shop --
 
 local backpackShopSection = shopTab:Section({ Text = "Backpack Shop" })
 local player = game:GetService("Players").LocalPlayer
+local userInputService = game:GetService("UserInputService")
 
 -- Function to enable Freefall method for smooth teleportation
 local function teleportTo(position)
@@ -728,14 +742,21 @@ local function teleportTo(position)
     getgenv().FreeFallMethod = false
 end
 
+-- Function to wait for "E" key press
+local function waitForEPress()
+    return userInputService.InputBegan:Wait().KeyCode == Enum.KeyCode.E
+end
+
 -- Function to handle teleportation and return
 local function buyBackpack(position)
     local originalPosition = player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character.HumanoidRootPart.Position
 
     teleportTo(position)  -- Teleport to backpack shop location
 
-    -- Wait for player to press "E" (buying action)
-    game:GetService("UserInputService").InputBegan:Wait()
+    -- Wait for player to press "E"
+    repeat
+        local keyPressed = waitForEPress()
+    until keyPressed
 
     -- Ensure the player is teleported back
     if originalPosition then
@@ -972,6 +993,7 @@ local BringPlayersToggle = ExploitSection:Toggle({
         end
     end
 })
+
 
 --
 --
