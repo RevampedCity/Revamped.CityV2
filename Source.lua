@@ -2,6 +2,9 @@
     local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/RevampedCity/Revamped.CityV2/refs/heads/main/Library.lua'))()
     local Window = Library:Window({ Text = "Revamped.City | 🐍THA BRONX 3🔪" })
 
+
+-- Combat -- 
+
 -- Player --
     local playerTab = Window:Tab({ Text = "Player" })
     local playerSection = playerTab:Section({ Text = "Player Options" })
@@ -389,6 +392,124 @@ teleportTo(location.position)
 end
 })
 end
+
+
+
+
+-- Create NYPD section
+local nypdSection = TeleportTab:Section({ Text = "NYPD" })
+
+
+-- Open GUI's --
+
+local guiTab = Window:Tab({ Text = "GUI's" })
+
+-- Create the GUI section
+local guiSection = guiTab:Section({ Text = "GUI" })
+
+-- Create the "Bronx Clothing" button
+local bronxClothingButton = guiSection:Button({
+    Text = "Bronx Clothing",
+    Callback = function()
+        local Plr = game.Players.LocalPlayer  -- Get the local player
+        Plr.PlayerGui["Bronx CLOTHING"].Enabled = true  -- Enable the "Bronx CLOTHING" GUI
+    end
+})
+
+-- Create the "Bronx Market" button
+local bronxMarketButton = guiSection:Button({
+    Text = "Bronx Market",
+    Callback = function()
+        local Plr = game.Players.LocalPlayer  -- Get the local player
+        Plr.PlayerGui["Bronx Market 2"].Enabled = true  -- Enable Bronx Market 2
+    end
+})
+
+-- Create the "Bronx Pawning" button
+local bronxPawningButton = guiSection:Button({
+    Text = "Bronx Pawning",
+    Callback = function()
+        local Plr = game.Players.LocalPlayer  -- Get the local player
+        Plr.PlayerGui["Bronx PAWNING"].Enabled = true  -- Enable the "Bronx PAWNING" GUI
+    end
+})
+
+-- Create the "Bronx Tattoos" button
+local bronxTattoosButton = guiSection:Button({
+    Text = "Bronx Tattoos",
+    Callback = function()
+        local Plr = game.Players.LocalPlayer  -- Get the local player
+        Plr.PlayerGui["Bronx TATTOOS"].Enabled = true  -- Enable the "Bronx TATTOOS" GUI
+    end
+})
+
+-- Create the "Bronx Crafting" button
+local bronxCraftingButton = guiSection:Button({
+    Text = "Bronx Crafting",
+    Callback = function()
+        local Plr = game.Players.LocalPlayer  -- Get the local player
+        Plr.PlayerGui.CraftGUI.Main.Visible = true  -- Make the "CraftGUI Main" visible
+    end
+})
+
+-- Create the "Bronx Garage" button
+local bronxGarageButton = guiSection:Button({
+    Text = "Bronx Garage",
+    Callback = function()
+        local Plr = game.Players.LocalPlayer  -- Get the local player
+        Plr.PlayerGui.ColorWheel.Enabled = true  -- Enable the "Bronx Garage" (ColorWheel)
+
+        -- Display a modern notification for 3 seconds
+        local Notification = Instance.new("ScreenGui")
+        Notification.Name = "Notification"
+        Notification.Parent = game.Players.LocalPlayer.PlayerGui
+
+        local TextLabel = Instance.new("TextLabel")
+        TextLabel.Parent = Notification
+        TextLabel.Text = "Press 'Back' Unless You Have The Game Pass"
+        TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        TextLabel.BackgroundTransparency = 0.5
+        TextLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        TextLabel.Position = UDim2.new(0.5, -150, 0, 20)  -- Position at the top middle of the screen
+        TextLabel.Size = UDim2.new(0, 300, 0, 50)
+        TextLabel.TextScaled = true
+        TextLabel.AnchorPoint = Vector2.new(0.5, 0)
+
+        -- Make the notification disappear after 3 seconds
+        wait(3)
+        Notification:Destroy()
+    end
+})
+
+-- Create a variable to keep track of the cloned ATMGui
+local clonedATMGui = nil
+
+-- Create the "Bronx ATM" toggle
+local bronxATMToggle = guiSection:Toggle({
+    Text = "Bronx ATM",
+    Callback = function(isToggled)
+        local Plr = game.Players.LocalPlayer  -- Get the local player
+        local lighting = game:GetService("Lighting")
+        local atmGui = lighting:FindFirstChild("Assets"):FindFirstChild("GUI"):FindFirstChild("ATMGui")  -- Get the ATMGui
+
+        if isToggled then
+            -- Clone the ATMGui and parent it to the PlayerGui
+            if atmGui then
+                clonedATMGui = atmGui:Clone()
+                clonedATMGui.Parent = Plr:WaitForChild("PlayerGui")
+            else
+                warn("ATMGui not found in Lighting.")
+            end
+        else
+            -- If untoggled, delete the cloned ATMGui from PlayerGui
+            if clonedATMGui then
+                clonedATMGui:Destroy()
+                clonedATMGui = nil
+            end
+        end
+    end
+})
+
 -- AutoFarm --
 local autoFarmTab = Window:Tab({ Text = "Auto Farm" })
 local autoFarmSection = autoFarmTab:Section({ Text = "Auto Farms" })
@@ -800,6 +921,87 @@ task.spawn(function()
         end
     end
 end)
+
+
+
+-- Create the Wearables section
+local wearablesSection = shopTab:Section({ Text = "Wearables" })
+
+-- Create buttons for wearables with their respective prices
+local shiestyButton = wearablesSection:Button({
+    Text = "Shiesty $25",
+    Callback = function()
+        game:GetService("ReplicatedStorage"):WaitForChild("ShopRemote"):InvokeServer("Shiesty")
+    end
+})
+
+local bluGlovesButton = wearablesSection:Button({
+    Text = "BluGloves $10",
+    Callback = function()
+        game:GetService("ReplicatedStorage"):WaitForChild("ShopRemote"):InvokeServer("BluGloves")
+    end
+})
+
+local whiteGlovesButton = wearablesSection:Button({
+    Text = "White Gloves $10",
+    Callback = function()
+        game:GetService("ReplicatedStorage"):WaitForChild("ShopRemote"):InvokeServer("WhiteGloves")
+    end
+})
+
+local blackGlovesButton = wearablesSection:Button({
+    Text = "BlackGloves $10",
+    Callback = function()
+        game:GetService("ReplicatedStorage"):WaitForChild("ShopRemote"):InvokeServer("BlackGloves")
+    end
+})
+
+local pinkCamoGlovesButton = wearablesSection:Button({
+    Text = "PinkCamoGloves $67",
+    Callback = function()
+        game:GetService("ReplicatedStorage"):WaitForChild("ShopRemote"):InvokeServer("PinkCamoGloves")
+    end
+})
+
+local redCamoGlovesButton = wearablesSection:Button({
+    Text = "RedCamoGloves $67",
+    Callback = function()
+        game:GetService("ReplicatedStorage"):WaitForChild("ShopRemote"):InvokeServer("RedCamoGloves")
+    end
+})
+
+local bluCamoGlovesButton = wearablesSection:Button({
+    Text = "BluCamoGloves $67",
+    Callback = function()
+        game:GetService("ReplicatedStorage"):WaitForChild("ShopRemote"):InvokeServer("BluCamoGloves")
+    end
+})
+
+-- Create the Food section
+local foodSection = shopTab:Section({ Text = "Food" })
+
+-- Create buttons for food with their respective prices
+local waterButton = foodSection:Button({
+    Text = "Water $10",
+    Callback = function()
+        game:GetService("ReplicatedStorage"):WaitForChild("ShopRemote"):InvokeServer("Water")
+    end
+})
+
+local rawSteakButton = foodSection:Button({
+    Text = "RawSteak $10",
+    Callback = function()
+        game:GetService("ReplicatedStorage"):WaitForChild("ShopRemote"):InvokeServer("RawSteak")
+    end
+})
+
+-- Add RawChicken button
+local rawChickenButton = foodSection:Button({
+    Text = "RawChicken $10",
+    Callback = function()
+        game:GetService("ReplicatedStorage"):WaitForChild("ShopRemote"):InvokeServer("RawChicken")
+    end
+})
 
 
 -- Bypasses --
