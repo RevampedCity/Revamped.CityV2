@@ -1,11 +1,16 @@
 local player, HttpService = game.Players.LocalPlayer, game:GetService("HttpService")
+local TweenService = game:GetService("TweenService")
 local attempts = 0
-local screenGui -- Reference to the ScreenGui for later removal
+local screenGui
 
 local function fetchAndParseKeys()
-    local success, response = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/RevampedCity/Revamped.CityV2/main/Keys") end)
+    local success, response = pcall(function()
+        return game:HttpGet("https://raw.githubusercontent.com/RevampedCity/Revamped.CityV2/main/Keys")
+    end)
     if success then
-        local success, keys = pcall(function() return HttpService:JSONDecode(response) end)
+        local success, keys = pcall(function()
+            return HttpService:JSONDecode(response)
+        end)
         return success and keys or nil
     end
     return nil
@@ -24,52 +29,50 @@ screenGui = Instance.new("ScreenGui")
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 500, 0, 400)
-frame.Position = UDim2.new(0.5, -250, 0.5, -200)
-frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-frame.BorderSizePixel = 0
+frame.Size = UDim2.new(0, 350, 0, 300)
+frame.Position = UDim2.new(0.5, -175, 0.5, -150)
+frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+frame.BorderSizePixel = 2  -- Set a border size
+frame.BorderColor3 = Color3.fromRGB(50, 50, 50)  -- Dark grey border color
 frame.Parent = screenGui
+frame.BackgroundTransparency = 1
+
+local fadeIn = TweenService:Create(frame, TweenInfo.new(0.7, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {BackgroundTransparency = 0})
+fadeIn:Play()
 
 local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 15)
 UICorner.Parent = frame
 
 local titleLabel = Instance.new("TextLabel")
-titleLabel.Size = UDim2.new(0, 400, 0, 50)
-titleLabel.Position = UDim2.new(0.5, -200, 0, 0)
-titleLabel.Text = "Revamped.City Key System"
+titleLabel.Size = UDim2.new(0, 330, 0, 50)
+titleLabel.Position = UDim2.new(0.5, -165, 0, 0)
+titleLabel.Text = "🔒 Revamped.City 🔒"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleLabel.TextSize = 30
+titleLabel.TextSize = 28
 titleLabel.Font = Enum.Font.GothamBold
 titleLabel.BackgroundTransparency = 1
 titleLabel.Parent = frame
 
-local keyLabel = Instance.new("TextLabel")
-keyLabel.Size = UDim2.new(0, 400, 0, 50)
-keyLabel.Position = UDim2.new(0.5, -200, 0.2, 0)
-keyLabel.Text = "Enter Key:"
-keyLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-keyLabel.TextSize = 20
-keyLabel.Font = Enum.Font.Gotham
-keyLabel.BackgroundTransparency = 1
-keyLabel.Parent = frame
-
 local keyBox = Instance.new("TextBox")
-keyBox.Size = UDim2.new(0, 300, 0, 40)
-keyBox.Position = UDim2.new(0.5, -150, 0.35, 0)
+keyBox.Size = UDim2.new(0, 280, 0, 40)
+keyBox.Position = UDim2.new(0.5, -140, 0.35, 0)
 keyBox.Text = ""
-keyBox.PlaceholderText = "Type key here"
+keyBox.PlaceholderText = "🔑 Enter your key here..."
 keyBox.TextColor3 = Color3.fromRGB(0, 0, 0)
 keyBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 keyBox.Font = Enum.Font.Gotham
 keyBox.TextSize = 18
-keyBox.BorderSizePixel = 2
-keyBox.BorderColor3 = Color3.fromRGB(200, 200, 200)
+keyBox.BorderSizePixel = 0
 keyBox.Parent = frame
 
+local UICornerKeyBox = Instance.new("UICorner")
+UICornerKeyBox.CornerRadius = UDim.new(0, 10)
+UICornerKeyBox.Parent = keyBox
+
 local submitButton = Instance.new("TextButton")
-submitButton.Size = UDim2.new(0, 200, 0, 50)
-submitButton.Position = UDim2.new(0.5, -100, 0.55, 0)
+submitButton.Size = UDim2.new(0, 160, 0, 50)
+submitButton.Position = UDim2.new(0.5, -170, 0.55, 0)
 submitButton.Text = "Submit"
 submitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 submitButton.BackgroundColor3 = Color3.fromRGB(0, 128, 0)
@@ -79,91 +82,99 @@ submitButton.BorderSizePixel = 0
 submitButton.Parent = frame
 
 local getKeyButton = Instance.new("TextButton")
-getKeyButton.Size = UDim2.new(0, 200, 0, 50)
-getKeyButton.Position = UDim2.new(0.5, -100, 0.65, 0)
+getKeyButton.Size = UDim2.new(0, 160, 0, 50)
+getKeyButton.Position = UDim2.new(0.5, 10, 0.55, 0)
 getKeyButton.Text = "Get Key"
 getKeyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-getKeyButton.BackgroundColor3 = Color3.fromRGB(0, 0, 128)
+getKeyButton.BackgroundColor3 = Color3.fromRGB(0, 128, 0)
 getKeyButton.Font = Enum.Font.GothamBold
 getKeyButton.TextSize = 20
 getKeyButton.BorderSizePixel = 0
 getKeyButton.Parent = frame
 
-local buttonUICorner = Instance.new("UICorner")
-buttonUICorner.CornerRadius = UDim.new(0, 15)
-buttonUICorner.Parent = submitButton
+local UICornerSubmit = Instance.new("UICorner")
+UICornerSubmit.CornerRadius = UDim.new(0, 10)
+UICornerSubmit.Parent = submitButton
 
-local messageLabel = Instance.new("TextLabel")
-messageLabel.Size = UDim2.new(0, 400, 0, 50)
-messageLabel.Position = UDim2.new(0.5, -200, 0.75, 0)
-messageLabel.Text = ""
-messageLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-messageLabel.TextSize = 20
-messageLabel.Font = Enum.Font.Gotham
-messageLabel.BackgroundTransparency = 1
-messageLabel.Parent = frame
+local UICornerGetKey = Instance.new("UICorner")
+UICornerGetKey.CornerRadius = UDim.new(0, 10)
+UICornerGetKey.Parent = getKeyButton
 
-local dragging, dragStart, startPos
-frame.InputBegan:Connect(function(input, isProcessed)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 and not isProcessed then
-        dragging = true
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, 0, 0, 30)
+statusLabel.Position = UDim2.new(0.5, -175, 1, -40)
+statusLabel.Text = ""
+statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+statusLabel.TextSize = 22
+statusLabel.Font = Enum.Font.GothamBold
+statusLabel.BackgroundTransparency = 1
+statusLabel.Parent = frame
+
+-- Make the frame draggable
+local dragToggle = nil
+local dragSpeed = 0.25
+local dragStart = nil
+local startPos = nil
+
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragToggle = true
         dragStart = input.Position
         startPos = frame.Position
     end
 end)
 
 frame.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+    if dragToggle and input.UserInputType == Enum.UserInputType.MouseMovement then
         local delta = input.Position - dragStart
         frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
 
 frame.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragToggle = false
+    end
 end)
+
+local function showStatusMessage(text, color)
+    statusLabel.Text = text
+    statusLabel.TextColor3 = color
+    statusLabel.TextTransparency = 1
+    local fadeIn = TweenService:Create(statusLabel, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 0})
+    local fadeOut = TweenService:Create(statusLabel, TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {TextTransparency = 1})
+    fadeIn:Play()
+    wait(2)
+    fadeOut:Play()
+end
+
+local function shakeFrame()
+    for i = 1, 5 do
+        frame.Position = UDim2.new(0.5, -180 + (i % 2 == 0 and 10 or -10), 0.5, -150)
+        frame.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+        wait(0.05)
+    end
+    frame.Position = UDim2.new(0.5, -175, 0.5, -150)
+    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+end
 
 submitButton.MouseButton1Click:Connect(function()
     local inputKey = keyBox.Text
     local inputClientId = game:GetService("RbxAnalyticsService"):GetClientId()
-
     if inputKey == "" then
-        messageLabel.Text = "Please enter a key!"
-        messageLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        shakeFrame()
+        showStatusMessage("❌ Please enter a key!", Color3.fromRGB(255, 0, 0))
         return
     end
-
     if validateKey(inputKey, inputClientId) then
-        messageLabel.Text = "Welcome!"
-        messageLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
-
-        -- Fetch and execute the Source.lua script if everything is valid
-        local success, scriptContent = pcall(function() return game:HttpGet("https://raw.githubusercontent.com/RevampedCity/Revamped.CityV2/main/Source.lua") end)
-        if success then
-            local loadSuccess, loadResult = pcall(loadstring(scriptContent))
-            if not loadSuccess then
-                messageLabel.Text = "Failed to load the script!"
-                messageLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-            else
-                -- Close the key system GUI after the script is executed
-                screenGui:Destroy()
-            end
-        else
-            messageLabel.Text = "Failed to fetch script!"
-            messageLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-        end
+        showStatusMessage("✅ Access Granted!", Color3.fromRGB(0, 255, 0))
+        wait(1)
+        screenGui:Destroy()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/RevampedCity/Revamped.CityV2/main/Source.lua"))()
     else
         attempts = attempts + 1
-        messageLabel.Text = "Invalid!"
-        messageLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        shakeFrame()
+        showStatusMessage("❌ Invalid Key!", Color3.fromRGB(255, 0, 0))
         if attempts >= 3 then game:Shutdown() end
     end
-end)
-
-getKeyButton.MouseButton1Click:Connect(function()
-    local clientId = game:GetService("RbxAnalyticsService"):GetClientId()
-    local textToCopy = "\nYour ID is: \"" .. clientId .. "\"\nDiscord Link: discord.gg/G22Bj92Mx9"
-    setclipboard(textToCopy)
-    messageLabel.Text = "Key info copied to clipboard!"
-    messageLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
 end)
