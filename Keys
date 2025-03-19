@@ -3,13 +3,13 @@
         "key": "Owner",
         "clientId": "03F28BB1-1CF2-4617-8E17-52A74FD7EED5",
         "username": "OwnerUsername",
-        "expirationDate": "2025-12-31"
+        "expirationDate": "2025-03-18"
     },
     {
         "key": "LAWSUIT",
         "clientId": "9D835BD8-3539-4922-807E-3A3064CC9B44",
         "username": "LawsuitUsername",
-        "expirationDate": "2025-06-30"
+        "expirationDate": "Lifetime"
     },
     {
         "key": "key3",
@@ -21,6 +21,6 @@
         "key": "ANITJJ2",
         "clientId": "59279CC4-2645-4A30-80F9-DF5EEDE147E1",
         "username": "ANITJJ2Username",
-        "expirationDate": "2025-03-25"
+        "expirationDate": "Lifetime"
     }
 ]
