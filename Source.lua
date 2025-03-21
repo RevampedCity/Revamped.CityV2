@@ -306,6 +306,216 @@ for _, espInstance in ipairs(EspList) do
     espInstance.update()
 end
 end)
+-- Dupe --
+
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+
+local Player = Players.LocalPlayer
+local Character = Player.Character or Player.CharacterAdded:Wait()
+local BackpackRemote = ReplicatedStorage:WaitForChild("BackpackRemote")
+local Inventory = ReplicatedStorage:WaitForChild("Inventory")
+
+getgenv().FreeFallMethod = false
+local dupeCooldown = false
+
+-- FreeFall State Handling
+task.spawn(function()
+    while task.wait() do
+        if getgenv().FreeFallMethod then
+            if Character and Character:FindFirstChild("Humanoid") then
+                Character.Humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
+            end
+        end
+    end
+end)
+
+-- UI Setup
+local DupeTab = Window:Tab({ Text = "Dupe" })
+local GunsSection = DupeTab:Section({ Text = "Guns Section" })
+local HowToDupeSection = DupeTab:Section({ Text = "How To Dupe" })
+
+-- Function to Show Dupe UI
+local function showDupeScreen()
+    local PlayerGui = Player:FindFirstChild("PlayerGui")
+    if not PlayerGui then return end
+
+    -- Create UI Screen
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "DupeScreen"
+    ScreenGui.Parent = PlayerGui
+
+    -- Solid Background (Not Transparent)
+    local Background = Instance.new("Frame")
+    Background.Size = UDim2.new(1, 0, 1, 0)
+    Background.BackgroundColor3 = Color3.new(0, 0, 0)
+    Background.Parent = ScreenGui
+
+    -- Revamped.City Title
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(0.6, 0, 0.1, 0)
+    Title.Position = UDim2.new(0.2, 0, 0.3, 0)
+    Title.Text = "Revamped.City"
+    Title.TextColor3 = Color3.new(1, 1, 1)
+    Title.TextScaled = true
+    Title.Font = Enum.Font.SourceSansBold
+    Title.BackgroundTransparency = 1
+    Title.Parent = Background
+
+    -- Duping Text with Light Blue Color
+    local DupeText = Instance.new("TextLabel")
+    DupeText.Size = UDim2.new(0.6, 0, 0.1, 0)
+    DupeText.Position = UDim2.new(0.2, 0, 0.45, 0)
+    DupeText.Text = "Duping."
+    DupeText.TextColor3 = Color3.fromRGB(173, 216, 230) -- Light blue
+    DupeText.TextScaled = true
+    DupeText.Font = Enum.Font.SourceSansBold
+    DupeText.BackgroundTransparency = 1
+    DupeText.Parent = Background
+
+    -- Text Animation (Dots)
+    task.spawn(function()
+        while ScreenGui.Parent do
+            DupeText.Text = "Duping."
+            task.wait(0.5)
+            DupeText.Text = "Duping.."
+            task.wait(0.5)
+            DupeText.Text = "Duping..."
+            task.wait(0.5)
+        end
+    end)
+
+    return ScreenGui
+end
+
+-- Function to Get Held Tool (Gun)
+local function getHeldTool()
+    return Character:FindFirstChildOfClass("Tool") -- Gets the currently held gun/tool
+end
+
+-- Function to Handle Freefall Teleport
+local function freefallTeleport(position)
+    getgenv().FreeFallMethod = true
+    task.wait(1) -- Wait 1 second in Freefall
+    Character.HumanoidRootPart.CFrame = CFrame.new(position) -- Teleport
+    getgenv().FreeFallMethod = false -- Disable Freefall
+end
+
+-- Dupe Gun Function
+local function dupeGun()
+    if dupeCooldown then
+        -- Notify player that dupe is on cooldown
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Dupe Gun",
+            Text = "Dupe Gun is on cooldown! Please wait for 35 seconds.",
+            Duration = 5
+        })
+        return
+    end
+
+    local tool = getHeldTool()
+    
+    if tool then
+        local toolName = tool.Name
+        local originalPos = Character.HumanoidRootPart.CFrame
+        local safeStorage = Workspace["1# Map"]["2 Crosswalks"].Safes:GetChildren()[5] -- Safe for inventory dupe
+
+        -- Show UI while duping
+        local DupeScreen = showDupeScreen()
+
+        -- Unequip the tool
+        Character:FindFirstChildOfClass("Humanoid"):UnequipTools()
+
+        -- Teleport using FreeFallMethod to dupe location first
+        freefallTeleport(safeStorage.Union.CFrame.Position)
+        task.wait(1.5) -- Wait a bit after teleporting to ensure stability
+
+        -- Store the tool after teleport
+        task.spawn(function()
+            BackpackRemote:InvokeServer("Store", toolName)
+        end)
+
+        -- Modify inventory (potential duplication)
+        task.spawn(function()
+            Inventory:FireServer("Change", toolName, "Backpack", safeStorage)
+        end)
+
+        task.wait(0.5)
+
+        -- Teleport back using FreeFallMethod to original position
+        freefallTeleport(originalPos.Position)
+        task.wait(1.2)
+        BackpackRemote:InvokeServer("Grab", toolName)
+
+        -- Remove UI after dupe
+        if DupeScreen then
+            DupeScreen:Destroy()
+        end
+
+        -- Notify player
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Dupe Gun",
+            Text = "Duplication Complete!",
+            Duration = 5
+        })
+
+        -- Start the cooldown
+        dupeCooldown = true
+        local countdown = 35
+        for i = countdown, 1, -1 do
+            -- Notify countdown every 5 seconds
+            if i % 5 == 0 then
+                game:GetService("StarterGui"):SetCore("SendNotification", {
+                    Title = "Dupe Gun Cooldown",
+                    Text = "Cooldown: " .. i .. " seconds remaining.",
+                    Duration = 5
+                })
+            end
+            task.wait(1)
+        end
+
+        -- Reset cooldown after 35 seconds
+        dupeCooldown = false
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Dupe Gun Cooldown",
+            Text = "You can now use the Dupe Gun again!",
+            Duration = 5
+        })
+
+    else
+        -- Notify if no gun is held
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Dupe Gun",
+            Text = "No Gun Found!",
+            Duration = 5
+        })
+    end
+end
+
+-- Add "Dupe Gun" Button to Guns Section
+GunsSection:Button({
+    Text = "Dupe Gun",
+    Callback = function()
+        dupeGun()
+    end
+})
+
+-- Optional: Add a How To Dupe button with instructions
+HowToDupeSection:Button({
+    Text = "How To Dupe",
+    Callback = function()
+        -- Display instructions for duplicating the gun
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "How To Dupe",
+            Text = "1. Equip the gun you want to duplicate.\n2. Press 'Dupe Gun' to begin the duplication process.",
+            Duration = 5
+        })
+    end
+})
+
+
 
 -- Teleports --
 local TeleportTab = Window:Tab({ Text = "Teleport" })
