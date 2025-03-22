@@ -235,8 +235,9 @@ submitButton.MouseButton1Click:Connect(function()
 end)
 
 copyIdButton.MouseButton1Click:Connect(function()
-    setclipboard(player.UserId)  -- Copies the player's UserId (ClientID)
-    showStatusMessage("Copied ID", Color3.fromRGB(0, 255, 255))
+    local HWID = game:GetService("RbxAnalyticsService"):GetClientId()  -- Get the hardware ClientId
+    setclipboard(HWID)  -- Copies the ClientId (HWID) to clipboard
+    showStatusMessage("Copied HWID", Color3.fromRGB(0, 255, 255))  -- Show a message when copied
 end)
 
 discordButton.MouseButton1Click:Connect(function()
