@@ -241,7 +241,7 @@ copyIdButton.MouseButton1Click:Connect(function()
 end)
 
 discordButton.MouseButton1Click:Connect(function()
-    setclipboard("https://discord.gg/RevampedCity")  -- Copies the Discord invite link
+    setclipboard("https://discord.gg/G22Bj92Mx9")  -- Copies the Discord invite link
     showStatusMessage("Copied Discord", Color3.fromRGB(0, 255, 255))
 end)
 
