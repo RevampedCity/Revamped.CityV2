@@ -778,116 +778,92 @@ end
     end
     end
     })
-    -- Koolaid Farm Section
-local player = game:GetService("Players").LocalPlayer
-local isAutoFarming = false
-
--- Teleport function with free fall effect
-function teleportWithFreeFall(targetPosition)
-    getgenv().FreeFallMethod = true
-    task.wait(0.8)
-    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        player.Character.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
+    local isAutoFarming = false
+    function hasItem(itemName)
+    local backpack = game:GetService("Players").LocalPlayer.Backpack
+    for _, item in ipairs(backpack:GetChildren()) do
+    if item.Name == itemName then
+    return true
     end
-    getgenv().FreeFallMethod = false
-end
-
--- Check if player has the item
-function hasItem(itemName)
-    for _, item in ipairs(player.Backpack:GetChildren()) do
-        if item.Name == itemName then
-            return true
-        end
     end
     return false
-end
-
--- Set hold duration to 0 for all proximity prompts in the workspace
-function setHoldDurationToZero()
-    for _, object in ipairs(workspace:GetDescendants()) do
-        if object:IsA("ProximityPrompt") then
-            object.HoldDuration = 0
-        end
     end
-end
-
--- Function to purchase necessary items for farming
-function purchaseItems()
-    local itemsNeeded = {"FreshWater", "Ice-Fruit Bag", "FijiWater", "Ice-Fruit Cupz"}
+    function purchaseItems()
+    local itemsNeeded = { "FreshWater", "Ice-Fruit Bag", "FijiWater", "Ice-Fruit Cupz" }
     for _, itemName in ipairs(itemsNeeded) do
-        if not hasItem(itemName) then
-            game:GetService("ReplicatedStorage"):WaitForChild("ExoticShopRemote"):InvokeServer(itemName)
-            task.wait(0.5)  -- Small delay to ensure item gets added
-        end
+    if not hasItem(itemName) then
+    game:GetService("ReplicatedStorage"):WaitForChild("ExoticShopRemote"):InvokeServer(itemName)
+    task.wait(0.5) -- Small delay to ensure item gets added
     end
-end
-
--- Hold tool until it is removed from the player's inventory
-function holdToolUntilRemoved(toolName)
+    end
+    end
+    function setHoldDurationToZero()
+    for _, obj in ipairs(workspace.CookingPots:GetDescendants()) do
+    if obj:IsA("ProximityPrompt") then
+     obj.HoldDuration = 0
+    end
+    end
+    end
+    function teleportWithFreeFall(targetPosition)
+    getgenv().FreeFallMethod = true
+    task.wait(0.8)
+    local player = game:GetService("Players").LocalPlayer
+    if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(targetPosition)
+    end
+    getgenv().FreeFallMethod = false
+    end
+    function holdToolUntilRemoved(toolName)
+    local player = game:GetService("Players").LocalPlayer
     while isAutoFarming and not hasItem(toolName) do
-        task.wait(0.2)
+    task.wait(0.2)
     end
     local tool = player.Backpack:FindFirstChild(toolName)
     if tool then
-        tool.Parent = player.Character  -- Equip the tool
+    tool.Parent = player.Character -- Equip the tool
+    print("Holding: " .. toolName)
     end
     while isAutoFarming and (hasItem(toolName) or player.Character:FindFirstChild(toolName)) do
-        task.wait(0.2)
+    task.wait(0.2)
     end
-end
-
--- Teleport to the sell location when Ice-Fruit Cupz is pressed
-function teleportToSellLocationWhenCupzPressed()
+    print(toolName .. " removed")
+    end
+    function teleportToSellLocationWhenCupzPressed()
+    local player = game:GetService("Players").LocalPlayer
     local prompt = workspace.CookingPots.CookingPot.CookPart.ProximityPrompt
     prompt.Triggered:Wait()  -- Wait until the prompt is triggered (i.e., the player presses "E")
-    teleportWithFreeFall(Vector3.new(-83.105, 286.721, -338.175))  -- Sell location
-end
-
--- The main AutoFarm function
-function autoFarm()
-    while isAutoFarming do
-        purchaseItems()
-        teleportWithFreeFall(Vector3.new(-134.003, 283.379, -575.231))  -- Start location
-        holdToolUntilRemoved("FreshWater")
-        task.wait(0.2)  -- Small buffer to ensure smooth transition
-        holdToolUntilRemoved("Ice-Fruit Bag")
-        task.wait(0.2)
-        holdToolUntilRemoved("FijiWater")
-        task.wait(0.2)
-        holdToolUntilRemoved("Ice-Fruit Cupz")
-
-        -- Wait until the player presses "E" for the teleport to the sell van
-        local prompt = workspace.CookingPots.CookingPot.CookPart.ProximityPrompt
-        prompt.Triggered:Wait()  -- Wait for "E" press
-        teleportWithFreeFall(Vector3.new(-83.105, 286.721, -338.175))  -- Van location
-        prompt.Triggered:Wait()  -- Wait for "E" press again before returning
-        teleportWithFreeFall(Vector3.new(-134.003, 283.379, -575.231))  -- Return to start location
-
-        task.wait(62)  -- Wait for the next cycle
+    teleportWithFreeFall(Vector3.new(-83.105, 286.721, -338.175))
     end
-end
-
--- Toggle to start and stop the AutoFarming
-local koolaidFarmToggle = autoFarmSection:Toggle({
+    function autoFarm()
+    while isAutoFarming do
+    setHoldDurationToZero()
+    purchaseItems()
+    teleportWithFreeFall(Vector3.new(-134.003, 283.379, -575.231))
+    holdToolUntilRemoved("FreshWater")
+    task.wait(0.2) -- Small buffer to ensure smooth transition
+    holdToolUntilRemoved("Ice-Fruit Bag")
+    task.wait(0.2)
+    holdToolUntilRemoved("FijiWater")
+    task.wait(0.2)
+    holdToolUntilRemoved("Ice-Fruit Cupz")
+    teleportToSellLocationWhenCupzPressed()
+    task.wait(62)
+    while isAutoFarming and hasItem("Ice-Fruit Cupz") do
+    task.wait(0.2)
+    end
+    teleportWithFreeFall(Vector3.new(-134.003, 283.379, -575.231))
+    end
+    end
+    local koolaidFarmToggle = autoFarmSection:Toggle({
     Text = "Koolaid Farm",
     Default = false,
     Callback = function(state)
-        isAutoFarming = state
-        if state then
-            autoFarm()  -- Start auto-farming when toggled on
-        end
+    isAutoFarming = state
+    if state then
+    autoFarm()
     end
-})
-
--- Make sure to set hold duration to 0 for all proximity prompts after each auto-farm cycle
-task.spawn(function()
-    while true do
-        setHoldDurationToZero()  -- Keep all proximity prompts' HoldDuration set to 0
-        task.wait(0.5)  -- Adjust this delay as needed (ensures that all ProximityPrompts get updated regularly)
     end
-end)
-
-    
+    })
     local garbageFarmEnabled = false
     local player = game:GetService("Players").LocalPlayer
     local character = player.Character or player.CharacterAdded:Wait()
@@ -1255,4 +1231,3 @@ end)
     end
     end
     })
-
