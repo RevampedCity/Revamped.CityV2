@@ -2,7 +2,6 @@
     local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/RevampedCity/Revamped.CityV2/refs/heads/main/Library.lua'))()
     local Window = Library:Window({ Text = "Revamped.City | 🐍THA BRONX 3🔪" })
 
-
 -- Combat -- 
 
 -- Player --
@@ -787,6 +786,72 @@
     end
     end
     })
+    local garbageFarmEnabled = false
+    local player = game:GetService("Players").LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    getgenv().FreeFallMethod = false  -- Used to control FreeFall state
+    task.spawn(function()
+    while task.wait() do
+    if getgenv().FreeFallMethod then
+    if character and character:FindFirstChild("Humanoid") then
+    character.Humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
+    end
+    end
+    end
+    end)
+    local function getAllDumpsters()
+    local dumpsters = {}
+    for _, obj in ipairs(workspace:GetDescendants()) do
+    if obj:IsA("Part") and obj.Name == "DumpsterPromt" and obj:FindFirstChildOfClass("ProximityPrompt") then
+    table.insert(dumpsters, obj)
+    end
+    end
+    return dumpsters
+    end
+    local function freefallTeleport(position)
+    getgenv().FreeFallMethod = true  -- Enable freefall
+    task.wait(0.8)  -- Wait for 0.8 seconds before teleporting
+    character.HumanoidRootPart.CFrame = CFrame.new(position)
+    getgenv().FreeFallMethod = false  -- Disable freefall
+    end
+    local function isAtPosition(position)
+    return (character.HumanoidRootPart.Position - position).Magnitude < 1  -- Check if close enough
+    end
+    autoFarmSection:Toggle({
+    Text = "Garbage Farm",
+    Callback = function(state)
+    garbageFarmEnabled = state
+    if state then
+    task.spawn(function()
+    local dumpsters = getAllDumpsters()
+    local currentDumpsterIndex = 1  -- Start from the first dumpster
+    while garbageFarmEnabled and currentDumpsterIndex <= #dumpsters do
+    local currentDumpster = dumpsters[currentDumpsterIndex]
+    if currentDumpster then
+    local prompt = currentDumpster:FindFirstChildOfClass("ProximityPrompt")
+    if prompt then
+    prompt.HoldDuration = 0  -- Make prompt activate instantly on press
+    freefallTeleport(currentDumpster.Position)
+    local attemptCount = 0
+    while not isAtPosition(currentDumpster.Position) and attemptCount < 3 do
+    task.wait(0.5)  -- Wait a bit before checking again
+    freefallTeleport(currentDumpster.Position)  -- Retry teleporting if not at the position
+    attemptCount = attemptCount + 1
+    end
+    if isAtPosition(currentDumpster.Position) then
+    prompt.Triggered:Wait()
+    currentDumpsterIndex = currentDumpsterIndex + 1
+    else
+    print("Failed to teleport to dumpster, retrying...")
+    end
+    end
+    end
+    task.wait(0.1)  -- Small wait to avoid too fast execution
+    end
+    end)
+    end
+    end
+    })
 
 -- Money --
 
@@ -1089,7 +1154,3 @@
     end
     })
 
-
---
---
---
