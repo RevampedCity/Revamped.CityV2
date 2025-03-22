@@ -410,6 +410,7 @@
     local locations = {
     {name = "Studio", position = Vector3.new(93432.28125, 14484.7421875, 565.5982666015625)},
     {name = "Studio Guns", position = Vector3.new(72422.1171875, 128855.6328125, -1086.7322998046875)},
+    {name = "NYPD", position = Vector3.new(-67.72321319580078, 283.4699401855469, -719.5398559570312)},
     {name = "Gun Shop 1", position = Vector3.new(92993.046875, 122097.953125, 17026.3515625)},
     {name = "Gun Shop 2", position = Vector3.new(66201.1875, 123615.703125, 5749.68115234375)},
     {name = "Gun Shop 3", position = Vector3.new(60841.60546875, 87609.140625, -352.474609375)},
@@ -488,7 +489,84 @@
     end
     })
     end
-  
+    local TeleportSection = TeleportTab:Section({ Text = "NYPD Section", Side = "Right" })
+
+-- Police Room Button (was Locker Room)
+TeleportSection:Button({
+    Text = "Police Room",
+    Callback = function()
+        teleportTo(Vector3.new(-125.00878143310547, 285.35595703125, -682.3515014648438))
+    end
+})
+
+-- FBI Room Button (was FBI)
+TeleportSection:Button({
+    Text = "FBI Room",
+    Callback = function()
+        teleportTo(Vector3.new(-117.96803283691406, 285.3559875488281, -739.5340576171875))
+    end
+})
+
+-- ESU Room Button
+TeleportSection:Button({
+    Text = "ESU Room",
+    Callback = function()
+        teleportTo(Vector3.new(-125.00878143310547, 285.35595703125, -682.3515014648438)) -- Update coordinates if needed
+    end
+})
+
+-- Electric Chair Button
+TeleportSection:Button({
+    Text = "Electric Chair",
+    Callback = function()
+        teleportTo(Vector3.new(-135.516845703125, 285.35595703125, -738.83935546875))
+    end
+})
+
+-- Court Room Button
+TeleportSection:Button({
+    Text = "Court Room",
+    Callback = function()
+        teleportTo(Vector3.new(-92.50507354736328, 287.05169677734375, -761.1896362304688))
+    end
+})
+
+-- Teleport Function with UI
+local function teleportTo(position)
+    local player = game:GetService("Players").LocalPlayer
+    local screen = Instance.new("ScreenGui", player.PlayerGui)
+    screen.Name = "TeleportScreen"
+    local frame = Instance.new("Frame", screen)
+    frame.Size = UDim2.new(1, 0, 1, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    frame.BackgroundTransparency = 0
+    local label = Instance.new("TextLabel", frame)
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.Text = "Teleporting."
+    label.TextColor3 = Color3.fromRGB(173, 216, 230)
+    label.TextScaled = true
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.GothamBold
+    local dotCounter = 1
+    local function updateDots()
+        while screen.Parent do
+            label.Text = "Teleporting." .. string.rep(".", dotCounter)
+            dotCounter = (dotCounter % 3) + 1
+            task.wait(1)
+        end
+    end
+    task.spawn(updateDots)
+    
+    -- Freefall Teleportation
+    getgenv().FreeFallMethod = true
+    wait(1)  -- Add a short delay before teleporting
+    player.Character.HumanoidRootPart.CFrame = CFrame.new(position)
+    getgenv().FreeFallMethod = false
+
+    -- Remove the teleport UI after teleport
+    screen:Destroy()
+end
+    
 -- Open GUI's --
     local guiTab = Window:Tab({ Text = "GUI's" })
     local guiSection = guiTab:Section({ Text = "GUI" })
